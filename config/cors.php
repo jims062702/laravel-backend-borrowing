@@ -19,11 +19,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [
-    'http://localhost:5173',
-    'https://react-frontend-borrowing.vercel.app',
-    'https://react-frontend-borrowing-git-main-jims062702s-projects.vercel.app',
-],
+    'allowed_origins' => ['*'],
 
 
     'allowed_origins_patterns' => [],
