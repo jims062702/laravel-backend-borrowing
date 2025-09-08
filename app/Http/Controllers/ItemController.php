@@ -35,6 +35,7 @@ class ItemController extends Controller
         $item = Item::where('id', $id)
                     ->where('admin_id', $request->user()->id)
                     ->firstOrFail();
+
         return $item;
     }
 
@@ -59,8 +60,8 @@ class ItemController extends Controller
         $item = Item::where('id', $id)
                     ->where('admin_id', $request->user()->id)
                     ->firstOrFail();
-        $item->delete();
 
+        $item->delete();
         return response()->json(['message' => 'Item deleted']);
     }
 }

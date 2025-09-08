@@ -8,18 +8,35 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('items', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->text('description')->nullable();
-            $table->integer('quantity')->default(0);
-            $table->foreignId('admin_id')->constrained('users')->cascadeOnDelete();
-            $table->timestamps();
+        Schema::table('items', function (Blueprint $table) {
+            $table->unsignedBigInteger('admin_id')->after('id');
+
+            $table->foreign('admin_id')
+                  ->references('id')
+                  ->on('users')
+                  ->onDelete('cascade');
+        });
+
+        Schema::table('borrowed_items', function (Blueprint $table) {
+            $table->unsignedBigInteger('admin_id')->after('id');
+
+            $table->foreign('admin_id')
+                  ->references('id')
+                  ->on('users')
+                  ->onDelete('cascade');
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('items');
+        Schema::table('items', function (Blueprint $table) {
+            $table->dropForeign(['admin_id']);
+            $table->dropColumn('admin_id');
+        });
+
+        Schema::table('borrowed_items', function (Blueprint $table) {
+            $table->dropForeign(['admin_id']);
+            $table->dropColumn('admin_id');
+        });
     }
 };

@@ -20,9 +20,4 @@ class Item extends Model
     {
         return $this->hasMany(BorrowedItem::class);
     }
-
-    public function admin()
-    {
-        return $this->belongsTo(User::class, 'admin_id');
-    }
 }

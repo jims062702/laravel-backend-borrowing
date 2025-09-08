@@ -10,9 +10,7 @@ class BorrowedItemController extends Controller
 {
     public function index(Request $request)
     {
-        $adminId = $request->user()->id;
-
-        return BorrowedItem::where('admin_id', $adminId)
+        return BorrowedItem::where('admin_id', $request->user()->id)
                            ->with('item')
                            ->get();
     }
@@ -27,10 +25,8 @@ class BorrowedItemController extends Controller
             'status' => 'required|string|in:pending,returned',
         ]);
 
-        $adminId = $request->user()->id;
-
         $item = Item::where('id', $request->item_id)
-                    ->where('admin_id', $adminId)
+                    ->where('admin_id', $request->user()->id)
                     ->firstOrFail();
 
         if ($request->status === 'pending' && $item->quantity < $request->quantity) {
@@ -48,7 +44,7 @@ class BorrowedItemController extends Controller
             'borrowed_date' => $request->borrowed_date,
             'quantity' => $request->quantity,
             'status' => $request->status,
-            'admin_id' => $adminId,
+            'admin_id' => $request->user()->id,
         ]);
 
         return response()->json($borrowedItem, 201);
@@ -56,10 +52,8 @@ class BorrowedItemController extends Controller
 
     public function update(Request $request, $id)
     {
-        $adminId = $request->user()->id;
-
         $borrowedItem = BorrowedItem::where('id', $id)
-                                    ->where('admin_id', $adminId)
+                                    ->where('admin_id', $request->user()->id)
                                     ->firstOrFail();
 
         $request->validate([
@@ -72,19 +66,25 @@ class BorrowedItemController extends Controller
 
         $data = $request->all();
 
-        $item = Item::where('id', $borrowedItem->item_id)
-                    ->where('admin_id', $adminId)
-                    ->first();
-
-        if ($request->status === 'returned' && $item) {
+        if ($request->status === 'returned') {
             $data['return_date'] = now();
-            $item->quantity += $borrowedItem->quantity;
-            $item->save();
-        } elseif ($request->status === 'pending' && $item) {
+            $item = Item::where('id', $borrowedItem->item_id)
+                        ->where('admin_id', $request->user()->id)
+                        ->first();
+            if ($item) {
+                $item->quantity += $borrowedItem->quantity;
+                $item->save();
+            }
+        } elseif ($request->status === 'pending') {
             $data['return_date'] = null;
-            $item->quantity -= $borrowedItem->quantity;
-            if ($item->quantity < 0) $item->quantity = 0;
-            $item->save();
+            $item = Item::where('id', $borrowedItem->item_id)
+                        ->where('admin_id', $request->user()->id)
+                        ->first();
+            if ($item) {
+                $item->quantity -= $borrowedItem->quantity;
+                if ($item->quantity < 0) $item->quantity = 0;
+                $item->save();
+            }
         }
 
         $borrowedItem->update($data);
@@ -94,15 +94,13 @@ class BorrowedItemController extends Controller
 
     public function destroy(Request $request, $id)
     {
-        $adminId = $request->user()->id;
-
         $borrowedItem = BorrowedItem::where('id', $id)
-                                    ->where('admin_id', $adminId)
+                                    ->where('admin_id', $request->user()->id)
                                     ->firstOrFail();
 
         if ($borrowedItem->status === 'pending') {
             $item = Item::where('id', $borrowedItem->item_id)
-                        ->where('admin_id', $adminId)
+                        ->where('admin_id', $request->user()->id)
                         ->first();
             if ($item) $item->increment('quantity', $borrowedItem->quantity);
         }
