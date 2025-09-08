@@ -10,6 +10,9 @@ return new class extends Migration
     {
         Schema::create('items', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('admin_id')           // Add this
+                  ->constrained('users')           // references 'id' in users
+                  ->onDelete('cascade');          // delete items if user deleted
             $table->string('name');
             $table->text('description')->nullable();
             $table->integer('quantity')->default(0);

@@ -13,10 +13,17 @@ class Item extends Model
         'name',
         'description',
         'quantity',
+        'admin_id', // 👈 Add this
     ];
 
     public function borrowedItems()
     {
         return $this->hasMany(BorrowedItem::class);
     }
+
+    public function admin()
+    {
+        return $this->belongsTo(User::class, 'admin_id'); // 👈 Link to admin
+    }
 }
+
