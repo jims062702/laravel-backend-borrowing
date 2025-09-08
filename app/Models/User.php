@@ -31,9 +31,13 @@ class User extends Authenticatable
         ];
     }
 
-    // Relation: items created by this admin
     public function items()
     {
         return $this->hasMany(Item::class, 'admin_id');
+    }
+
+    public function borrowedItems()
+    {
+        return $this->hasMany(BorrowedItem::class, 'admin_id');
     }
 }

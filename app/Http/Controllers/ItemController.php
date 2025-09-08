@@ -7,14 +7,11 @@ use Illuminate\Http\Request;
 
 class ItemController extends Controller
 {
-    // List items for the current admin only
     public function index(Request $request)
     {
-        $adminId = $request->user()->id;
-        return Item::where('admin_id', $adminId)->get();
+        return Item::where('admin_id', $request->user()->id)->get();
     }
 
-    // Store a new item for the current admin
     public function store(Request $request)
     {
         $request->validate([
@@ -27,31 +24,24 @@ class ItemController extends Controller
             'name' => $request->name,
             'description' => $request->description,
             'quantity' => $request->quantity,
-            'admin_id' => $request->user()->id, // assign current admin
+            'admin_id' => $request->user()->id,
         ]);
 
         return response()->json($item, 201);
     }
 
-    // Show an item if it belongs to the current admin
     public function show(Request $request, $id)
     {
-        $adminId = $request->user()->id;
-
         $item = Item::where('id', $id)
-                    ->where('admin_id', $adminId)
+                    ->where('admin_id', $request->user()->id)
                     ->firstOrFail();
-
         return $item;
     }
 
-    // Update an item only if it belongs to the current admin
     public function update(Request $request, $id)
     {
-        $adminId = $request->user()->id;
-
         $item = Item::where('id', $id)
-                    ->where('admin_id', $adminId)
+                    ->where('admin_id', $request->user()->id)
                     ->firstOrFail();
 
         $request->validate([
@@ -61,21 +51,16 @@ class ItemController extends Controller
         ]);
 
         $item->update($request->only(['name', 'description', 'quantity']));
-
-        return response()->json($item);
+        return $item;
     }
 
-    // Delete an item only if it belongs to the current admin
     public function destroy(Request $request, $id)
     {
-        $adminId = $request->user()->id;
-
         $item = Item::where('id', $id)
-                    ->where('admin_id', $adminId)
+                    ->where('admin_id', $request->user()->id)
                     ->firstOrFail();
-
         $item->delete();
 
-        return response()->json(['message' => 'Item deleted successfully']);
+        return response()->json(['message' => 'Item deleted']);
     }
 }

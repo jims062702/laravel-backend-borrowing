@@ -6,21 +6,20 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
-{
-    Schema::table('items', function (Blueprint $table) {
-        $table->foreignId('admin_id')->after('id')->constrained('users')->onDelete('cascade');
-    });
-}
+    {
+        Schema::create('items', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->text('description')->nullable();
+            $table->integer('quantity')->default(0);
+            $table->foreignId('admin_id')->constrained('users')->cascadeOnDelete();
+            $table->timestamps();
+        });
+    }
 
-public function down(): void
-{
-    Schema::table('items', function (Blueprint $table) {
-        $table->dropColumn('admin_id');
-    });
-}
-
+    public function down(): void
+    {
+        Schema::dropIfExists('items');
+    }
 };

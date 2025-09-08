@@ -10,12 +10,13 @@ return new class extends Migration
     {
         Schema::create('borrowed_items', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('item_id')->constrained('items')->onDelete('cascade');
             $table->string('borrower_name');
+            $table->foreignId('item_id')->constrained('items')->cascadeOnDelete();
             $table->date('borrowed_date');
             $table->integer('quantity');
-            $table->date('return_date')->nullable();
-            $table->enum('status', ['pending', 'returned'])->default('pending');
+            $table->enum('status', ['pending','returned']);
+            $table->dateTime('return_date')->nullable();
+            $table->foreignId('admin_id')->constrained('users')->cascadeOnDelete();
             $table->timestamps();
         });
     }

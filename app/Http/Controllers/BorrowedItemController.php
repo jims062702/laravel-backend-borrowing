@@ -8,15 +8,15 @@ use Illuminate\Http\Request;
 
 class BorrowedItemController extends Controller
 {
-    // List borrowed items for current admin only
     public function index(Request $request)
     {
-        return BorrowedItem::where('admin_id', $request->user()->id)
+        $adminId = $request->user()->id;
+
+        return BorrowedItem::where('admin_id', $adminId)
                            ->with('item')
                            ->get();
     }
 
-    // Store a new borrowed item for current admin
     public function store(Request $request)
     {
         $request->validate([
@@ -27,9 +27,10 @@ class BorrowedItemController extends Controller
             'status' => 'required|string|in:pending,returned',
         ]);
 
-        // Ensure the item belongs to current admin
+        $adminId = $request->user()->id;
+
         $item = Item::where('id', $request->item_id)
-                    ->where('admin_id', $request->user()->id)
+                    ->where('admin_id', $adminId)
                     ->firstOrFail();
 
         if ($request->status === 'pending' && $item->quantity < $request->quantity) {
@@ -47,17 +48,18 @@ class BorrowedItemController extends Controller
             'borrowed_date' => $request->borrowed_date,
             'quantity' => $request->quantity,
             'status' => $request->status,
-            'admin_id' => $request->user()->id,
+            'admin_id' => $adminId,
         ]);
 
         return response()->json($borrowedItem, 201);
     }
 
-    // Update borrowed item (only for current admin)
     public function update(Request $request, $id)
     {
+        $adminId = $request->user()->id;
+
         $borrowedItem = BorrowedItem::where('id', $id)
-                                    ->where('admin_id', $request->user()->id)
+                                    ->where('admin_id', $adminId)
                                     ->firstOrFail();
 
         $request->validate([
@@ -68,24 +70,21 @@ class BorrowedItemController extends Controller
             'quantity' => 'sometimes|required|integer|min:1',
         ]);
 
-        $data = $request->only(['borrower_name','item_id','borrowed_date','quantity','status']);
+        $data = $request->all();
 
-        // Handle stock adjustment
-        if ($request->status === 'returned' && $borrowedItem->status !== 'returned') {
+        $item = Item::where('id', $borrowedItem->item_id)
+                    ->where('admin_id', $adminId)
+                    ->first();
+
+        if ($request->status === 'returned' && $item) {
             $data['return_date'] = now();
-            $item = Item::find($borrowedItem->item_id);
-            if ($item) {
-                $item->quantity += $borrowedItem->quantity;
-                $item->save();
-            }
-        } elseif ($request->status === 'pending' && $borrowedItem->status === 'returned') {
+            $item->quantity += $borrowedItem->quantity;
+            $item->save();
+        } elseif ($request->status === 'pending' && $item) {
             $data['return_date'] = null;
-            $item = Item::find($borrowedItem->item_id);
-            if ($item) {
-                $item->quantity -= $borrowedItem->quantity;
-                if ($item->quantity < 0) $item->quantity = 0;
-                $item->save();
-            }
+            $item->quantity -= $borrowedItem->quantity;
+            if ($item->quantity < 0) $item->quantity = 0;
+            $item->save();
         }
 
         $borrowedItem->update($data);
@@ -93,23 +92,25 @@ class BorrowedItemController extends Controller
         return response()->json($borrowedItem);
     }
 
-    // Delete borrowed item (only for current admin)
     public function destroy(Request $request, $id)
     {
+        $adminId = $request->user()->id;
+
         $borrowedItem = BorrowedItem::where('id', $id)
-                                    ->where('admin_id', $request->user()->id)
+                                    ->where('admin_id', $adminId)
                                     ->firstOrFail();
 
         if ($borrowedItem->status === 'pending') {
-            $item = Item::find($borrowedItem->item_id);
-            if ($item) $item->quantity += $borrowedItem->quantity;
+            $item = Item::where('id', $borrowedItem->item_id)
+                        ->where('admin_id', $adminId)
+                        ->first();
+            if ($item) $item->increment('quantity', $borrowedItem->quantity);
         }
 
         $borrowedItem->delete();
         return response()->json(['message' => 'Borrow record deleted']);
     }
 
-    // Reports for current admin only
     public function report(Request $request)
     {
         $adminId = $request->user()->id;

@@ -13,7 +13,7 @@ class Item extends Model
         'name',
         'description',
         'quantity',
-        'admin_id', // add admin_id
+        'admin_id',
     ];
 
     public function borrowedItems()

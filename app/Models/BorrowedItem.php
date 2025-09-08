@@ -10,13 +10,13 @@ class BorrowedItem extends Model
     use HasFactory;
 
     protected $fillable = [
-        'item_id',
         'borrower_name',
+        'item_id',
         'borrowed_date',
         'quantity',
         'status',
         'return_date',
-        'admin_id', // add this
+        'admin_id',
     ];
 
     public function item()
@@ -29,4 +29,3 @@ class BorrowedItem extends Model
         return $this->belongsTo(User::class, 'admin_id');
     }
 }
-
