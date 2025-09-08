@@ -16,10 +16,17 @@ class BorrowedItem extends Model
         'quantity',
         'status',
         'return_date',
+        'admin_id', // add this
     ];
 
     public function item()
     {
         return $this->belongsTo(Item::class);
     }
+
+    public function admin()
+    {
+        return $this->belongsTo(User::class, 'admin_id');
+    }
 }
+

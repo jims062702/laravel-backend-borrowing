@@ -13,7 +13,7 @@ class Item extends Model
         'name',
         'description',
         'quantity',
-        'admin_id', // 👈 Add this
+        'admin_id', // add admin_id
     ];
 
     public function borrowedItems()
@@ -23,7 +23,6 @@ class Item extends Model
 
     public function admin()
     {
-        return $this->belongsTo(User::class, 'admin_id'); // 👈 Link to admin
+        return $this->belongsTo(User::class, 'admin_id');
     }
 }
-
