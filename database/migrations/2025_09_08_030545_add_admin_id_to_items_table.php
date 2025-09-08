@@ -7,7 +7,9 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     public function up(): void
-    {
+{
+    // Only add admin_id if it does not exist yet
+    if (!Schema::hasColumn('items', 'admin_id')) {
         Schema::table('items', function (Blueprint $table) {
             $table->unsignedBigInteger('admin_id')->after('id');
 
@@ -16,6 +18,9 @@ return new class extends Migration
                   ->on('users')
                   ->onDelete('cascade');
         });
+    }
+
+
 
         Schema::table('borrowed_items', function (Blueprint $table) {
             $table->unsignedBigInteger('admin_id')->after('id');
